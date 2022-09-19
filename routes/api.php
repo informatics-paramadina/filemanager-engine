@@ -17,3 +17,7 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/files', [\App\Http\Controllers\FileController::class, 'index']);
+Route::get('/files/{uuid}', [\App\Http\Controllers\FileController::class, 'show']);
+Route::post('/files', [\App\Http\Controllers\FileController::class, 'insert']);
