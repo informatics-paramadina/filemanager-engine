@@ -17,6 +17,7 @@ class File extends Model
         'mime_type',
         'size',
         'owner',
+        'owned_by',
         'parent_id',
         'is_private',
         'password',
@@ -26,6 +27,7 @@ class File extends Model
     protected $hidden = [
         'password',
         'location',
+        'owned_by',
     ];
 
     protected static function boot()
@@ -57,5 +59,15 @@ class File extends Model
     public function parent()
     {
         return $this->belongsTo(File::class, 'parent_id');
+    }
+
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owned_by', 'id');
+    }
+
+    public function permission()
+    {
+        return $this->hasMany(Permission::class);
     }
 }

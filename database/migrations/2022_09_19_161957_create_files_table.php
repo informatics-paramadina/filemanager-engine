@@ -21,7 +21,7 @@ class CreateFilesTable extends Migration
             $table->string('mime_type');
             $table->bigInteger('size')->nullable(); // bytes
             $table->string('owner')->nullable();
-
+            $table->unsignedBigInteger('owned_by');
             // permission related
             $table->boolean('is_private')->nullable()->default(false);
             $table->string('password')->nullable();
@@ -33,7 +33,8 @@ class CreateFilesTable extends Migration
         });
 
         Schema::table('files', function (Blueprint $table) {
-            $table->foreignUuid('parent_id')->nullable()->references('id')->on('files');
+            $table->foreignUuid('parent_id')->nullable()->references('id')->on('files')->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreign('owned_by')->references('id')->on('users')->cascadeOnDelete()->cascadeOnUpdate();
         });
     }
 
