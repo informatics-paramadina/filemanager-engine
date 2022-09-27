@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\File;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -66,6 +67,15 @@ class AuthController extends Controller
             return response()->json($exception->getMessage());
         }
 
+        $file = File::updateOrCreate([
+            'owned_by' => $user->id,
+        ], [
+            'filename' => $user->uid,
+            'mime_type' => 'directory',
+            'is_private' => true,
+            'password' => Hash::make($user->uid),
+            'location' => '/files/'.$user->uid,
+        ]);
         Storage::disk('local')->makeDirectory('/files/'.$user->uid);
 
         return response()->json($user);
@@ -76,6 +86,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'access_token' => $token,
+            'login_type' => 'email',
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);

@@ -19,7 +19,6 @@ class FileController extends Controller
     {
         $files = File::with('owner:email,id')
             ->where('parent_id', null)
-            ->where('owned_by', auth()->user()->id)
             ->get();
 
         return response()->json($files);
