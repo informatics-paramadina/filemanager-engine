@@ -79,7 +79,7 @@ class GoogleController extends Controller
        {
            $redirurl = Session::get('redirect_url');
            Session::forget('redirect_url');
-           return redirect($redirurl."?token=".$token);
+           return redirect($redirurl."?token=".$token."&expiredIn=".$googleUser->expiresIn);
        }
 
        return $this->respondWithToken($token);
