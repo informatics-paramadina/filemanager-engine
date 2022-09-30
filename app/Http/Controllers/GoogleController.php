@@ -7,6 +7,7 @@ use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
@@ -14,8 +15,13 @@ use PHPUnit\Exception;
 
 class GoogleController extends Controller
 {
-    public function redirect()
+    public function redirect(Request $request)
     {
+        if($request->has('redirect_url'))
+        {
+            Session::put('redirect_url', $request->input('redirect_url'));
+        }
+
         try {
             return Socialite::driver('google')->redirect();
         } catch (InvalidStateException $exception)
@@ -68,6 +74,13 @@ class GoogleController extends Controller
            'password' => Hash::make($user->uid),
            'location' => '/files/'.$user->uid,
        ]);
+
+       if(Session::has('redirect_url'))
+       {
+           $redirurl = Session::get('redirect_url');
+           Session::forget('redirect_url');
+           return redirect($redirurl."?token=".$token);
+       }
 
        return $this->respondWithToken($token);
     }
