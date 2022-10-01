@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\File;
+use App\Models\Profile;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -61,6 +62,11 @@ class AuthController extends Controller
                 'uid' => $this->generateRandomString(),
                 'email' => $request->email,
                 'password' => Hash::make($request->password)
+            ]);
+            $profile = Profile::create([
+                'user_id' => $user->id,
+                'name' => $request->input('name', '-'),
+                'avatar' => $request->input('avatar', "https://ui-avatars.com/api/?name=".($request->name ?? $user->email)."&background=random"),
             ]);
         } catch (\Exception $exception)
         {
