@@ -59,7 +59,7 @@ class GoogleController extends Controller
            'additionalInfo' => $googleUser->getId()
        ]);
 
-       $token = auth()->setTTL($googleUser->expiresIn)->login($user);
+       $token = auth('api')->setTTL($googleUser->expiresIn)->login($user);
        if(!Storage::disk('local')->exists('/files/'.$user->uid))
        {
            Storage::disk('local')->makeDirectory('/files/'.$user->uid);
