@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\InvalidStateException;
 use PHPUnit\Exception;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class GoogleController extends Controller
 {
@@ -58,8 +59,7 @@ class GoogleController extends Controller
            'avatar' => $googleUser->getAvatar(),
            'additionalInfo' => $googleUser->getId()
        ]);
-
-       $token = auth('api')->setTTL($googleUser->expiresIn)->login($user);
+       $token = JWTAuth::fromUser($user);
        if(!Storage::disk('local')->exists('/files/'.$user->uid))
        {
            Storage::disk('local')->makeDirectory('/files/'.$user->uid);
