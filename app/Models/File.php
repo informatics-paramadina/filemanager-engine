@@ -22,6 +22,7 @@ class File extends Model
         'is_private',
         'password',
         'location',
+        'is_user_root_folder',
     ];
 
     protected $hidden = [
@@ -29,6 +30,31 @@ class File extends Model
         'location',
         'owned_by',
     ];
+
+    protected $appends = [
+        'is_from_me',
+        'have_password',
+        'parent_have_password'
+    ];
+
+    public function getIsFromMeAttribute()
+    {
+        return $this->attributes['owned_by'] === auth('api')->id();
+    }
+
+    public function getHavePasswordAttribute()
+    {
+        return $this->attributes['password'] !== null;
+    }
+
+    public function getParentHavePasswordAttribute()
+    {
+        if($parent = $this->parent()->first())
+        {
+            return $parent->password !== "";
+        }
+        return false;
+    }
 
     protected static function boot()
     {

@@ -59,7 +59,7 @@ class FileController extends Controller
 
     public function show(Request $request, string $uuid)
     {
-        $files = File::with('children', 'parent', 'owner:email,id', 'permission')->whereIn('id', [$uuid])->first();
+        $files = File::with('children', 'parent', 'owner:email,id', 'owner.profile', 'permission')->whereIn('id', [$uuid])->first();
 
         if(!$files) return response()->json("not found", 404);
 
@@ -146,6 +146,7 @@ class FileController extends Controller
                 'is_private' => $request->is_private ?? false,
                 'password' => $request->password,
                 'location' => $location,
+                'is_user_root_folder' => false,
                 ]);
 
             Storage::disk('local')->put($location ,$file->getContent());

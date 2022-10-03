@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AllowedEmail;
 use App\Models\File;
 use App\Models\Profile;
 use App\Models\User;
@@ -40,6 +41,32 @@ class GoogleController extends Controller
            return response()->json(['error' => 'invalid google response'], 401);
        }
 
+       //find group
+        $group = AllowedEmail::where('group', explode("@", $googleUser->getEmail())[1])->first();
+       if(!$group)
+       {
+           return response()->json(['error' => 'forbidden access'], 401);
+       }
+
+        if(!$group->is_allowed)
+        {
+            return response()->json(['error' => 'forbidden access',
+                'message' => 'your domain group ('.$group->group.') is blacklisted, please contact your administrator for further information'], 401);
+        }
+
+       $found = AllowedEmail::where('email', $googleUser->getEmail())->first();
+
+       if(!$found && !$group)
+       {
+           return response()->json(['error' => 'forbidden access'], 401);
+       }
+
+       if(!$found && $group)
+       {
+           return response()->json(['error' => 'forbidden access',
+               'message' => 'your account does not have access in '.($group->tag ?? $group->group).', please contact your administrator'], 401);
+       }
+
        try {
            $user = User::updateOrCreate([
                'uid' => $googleUser->getId(),
@@ -73,6 +100,7 @@ class GoogleController extends Controller
            'is_private' => true,
            'password' => Hash::make($user->uid),
            'location' => '/files/'.$user->uid,
+           'is_user_root_folder' => true,
        ]);
 
        if(Session::has('redirect_url'))
