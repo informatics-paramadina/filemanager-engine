@@ -26,10 +26,63 @@ class FileController extends Controller
 
     public function destroy(Request $request, string $uuid)
     {
-        $files = File::find($uuid);
+        $files = File::with('children')->where('id', $uuid)->first();
         if(!$files) return response()->json("not found", 404);
 
+        if($files->is_private)
+        {
+            if($files->owned_by != auth()->user()->id) return response()->json([
+                "error" => "unauthorized",
+                "message" => "you don't have access to this file/folder",
+                "have_password" => (bool)$files->password,
+            ], 401);
+        }
+
+        // check if files has parent
+        if($files->parent)
+        {
+            // check if folder parent is private
+            if($files->parent->is_private)
+            {
+                if(!$request->has('password') || $request->password != $files->parent->password)
+                {
+                    return response()->json('unauthorized access to '.$files->id, 401);
+                }
+            }
+        }
+
+        $treeChildren = [];
+        if(count($files->children) == 0 )
+        {
+            if($files->mime_type != "directory") {
+                Storage::disk('local')->delete($files->location);
+            }
+            $files->delete();
+            return response()->json(['message' => 'success delete file']);
+        }
+
+        $this->childrenCatcher($treeChildren, $files);
+
+        for($i = count($treeChildren) -1; $i >= 0 ; $i--){
+           if($treeChildren[$i]->mime_type == "directory") {
+               $treeChildren[$i]->delete();
+           } else {
+               Storage::disk('local')->delete($treeChildren[$i]->location);
+               $treeChildren[$i]->delete();
+           }
+        }
+
+        return response()->json(['message' => 'success delete files']);
     }
+
+    function childrenCatcher(&$treeChildren, $files)
+    {
+        $treeChildren[] = $files;
+        foreach ($files->children as $child){
+            $this->childrenCatcher($treeChildren, $child);
+        }
+    }
+
 
     public function download(Request $request, string $uuid)
     {
@@ -60,10 +113,18 @@ class FileController extends Controller
     public function show(Request $request, string $uuid)
     {
         $files = File::with('children', 'parent', 'owner:email,id', 'owner.profile', 'permission')->whereIn('id', [$uuid])->first();
+        $myown = $files->owned_by == auth('api')->id();
+
+        if(!$myown) {
+            if($files->parent)
+            {
+                $myown = $files->parent->owned_by == auth('api')->id();
+            }
+        }
 
         if(!$files) return response()->json("not found", 404);
 
-        if($files->is_private)
+        if($files->is_private && !$myown)
         {
             if($files->password && $request->has('password') && $files->password == $request->password)
             {
@@ -78,7 +139,7 @@ class FileController extends Controller
         }
 
         // check if files has parent
-        if($files->parent)
+        if($files->parent && !$myown)
         {
             // check if folder parent is private
             if($files->parent->is_private)
@@ -98,7 +159,7 @@ class FileController extends Controller
         $statusFile = [];
         $parentFile = null;
 
-        if($request->has('parent_id'))
+        if($request->has('parent_id') && $request->parent_id !== null)
         {
             $parentFile = File::find($request->parent_id);
             if(!$parentFile) return response()->json("invalid parent_id", 400);
@@ -154,7 +215,5 @@ class FileController extends Controller
         }
 
         return  response()->json($statusFile);
-
-
     }
 }

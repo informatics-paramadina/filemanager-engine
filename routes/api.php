@@ -21,6 +21,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::get('/files', [\App\Http\Controllers\FileController::class, 'index']);
 Route::get('/files/{uuid}', [\App\Http\Controllers\FileController::class, 'show']);
 Route::get('/files/{uuid}/download', [\App\Http\Controllers\FileController::class, 'download']);
+Route::delete('/files/{uuid}', [\App\Http\Controllers\FileController::class, 'destroy']);
 Route::post('/files', [\App\Http\Controllers\FileController::class, 'insert']);
 Route::post('/user/register', [\App\Http\Controllers\AuthController::class, 'register']);
 Route::post('/user/login', [\App\Http\Controllers\AuthController::class, 'login']);
