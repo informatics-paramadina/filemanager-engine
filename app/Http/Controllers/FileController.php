@@ -17,7 +17,7 @@ class FileController extends Controller
 
     public function index()
     {
-        $files = File::with('owner:email,id')
+        $files = File::with('owner:email,id', 'owner.profile', 'permission')
             ->where('parent_id', null)
             ->get();
 
@@ -112,7 +112,7 @@ class FileController extends Controller
 
     public function show(Request $request, string $uuid)
     {
-        $files = File::with('children', 'parent', 'owner:email,id', 'owner.profile', 'permission')->whereIn('id', [$uuid])->first();
+        $files = File::with('children', 'children.owner:email,id', 'children.owner.profile','parent', 'owner:email,id', 'owner.profile', 'permission', 'children.permission')->whereIn('id', [$uuid])->first();
         $myown = $files->owned_by == auth('api')->id();
 
         if(!$myown) {
@@ -179,6 +179,7 @@ class FileController extends Controller
         {
             File::create([
                 'filename' => $request->folder_name,
+                'description' => $request->description,
                 'mime_type' => 'directory',
                 'size' => 0,
                 'owner' => $request->owner,
@@ -186,6 +187,7 @@ class FileController extends Controller
                 'parent_id' => $request->parent_id ,
                 'is_private' => $request->is_private ?? false,
                 'password' => $request->password,
+                'is_user_root_folder' => false,
             ]);
 
             return  response()->json("folder created");
@@ -198,6 +200,7 @@ class FileController extends Controller
             $location = "/files/".auth()->user()->uid."/".$file->getClientOriginalName();
             $newFile = File::create([
                 'filename' => $file->getClientOriginalName(),
+                'description' => $request->description,
                 'extension' => $file->extension(),
                 'mime_type' => $file->getMimeType(),
                 'size' => $file->getSize(),

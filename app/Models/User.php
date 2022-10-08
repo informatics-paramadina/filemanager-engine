@@ -73,4 +73,9 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->hasMany(File::class, 'owned_by', 'id');
     }
+
+    public function permission()
+    {
+        return $this->hasMany(Permission::class);
+    }
 }
