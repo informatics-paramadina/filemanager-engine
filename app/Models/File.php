@@ -79,7 +79,7 @@ class File extends Model
 
     public function children()
     {
-        return $this->hasMany(File::class, 'parent_id');
+        return $this->hasMany(File::class, 'parent_id')->orderBy('filename');
     }
 
     public function parent()

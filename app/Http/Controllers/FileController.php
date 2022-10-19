@@ -19,7 +19,7 @@ class FileController extends Controller
     {
         $files = File::with('owner:email,id', 'owner.profile', 'permission')
             ->where('parent_id', null)
-            ->get();
+            ->get()->sortBy('filename')->values();
 
         return response()->json($files);
     }
